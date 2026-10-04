@@ -2,15 +2,17 @@
 // sees the requests visitors make, as they come, and accepts or declines
 // each; sets the hours she works, week by week; and blocks out times. Every
 // time is shown and typed on her clock (her time zone, in backend.sql's
-// settings). Anyone else who signs in is told the account isn't set up, and
+// settings). In Website she changes the site's words and pictures, saved
+// on the platform for the site to read as it opens (content.js); nothing
+// shows on the site until she saves. Anyone else who signs in is told the account isn't set up, and
 // shown its id: the id that, put in shivonne_dubarry_staff, makes an account
 // hers - as her verified email address does, put in
 // shivonne_dubarry_staff_emails, even before she first signs in.
 
-import { ChimeApp, Chimes, Controller, Look, Phrase } from "../gd_chime/gd_chime.js?v=830936e87b82";
-import { SESSIONS } from "../content.js?v=830936e87b82";
-import { DARK, LIGHT } from "../palette.js?v=830936e87b82";
-import { Office } from "./office.js?v=830936e87b82";
+import { ChimeApp, Chimes, Controller, Look, Phrase } from "../gd_chime/gd_chime.js?v=53044441deda";
+import { LIMITS, SESSIONS, SESSION_IDS, merged, useContent } from "../content.js?v=53044441deda";
+import { DARK, LIGHT } from "../palette.js?v=53044441deda";
+import { Office } from "./office.js?v=53044441deda";
 
 const SIGNS_OUT = "signs_out";
 const SHOWS = "shows_a_part";
@@ -25,8 +27,21 @@ const SETS_BLOCK_FROM = "sets_block_from";
 const SETS_BLOCK_TO = "sets_block_to";
 const BLOCKS = "blocks_a_time";
 const UNBLOCKS = "unblocks_a_time";
+const EDITS_PAGE = "edits_the_website";
+const ADDS_ITEM = "adds_an_item";
+const REMOVES_ITEM = "removes_an_item";
+const CHOOSES_PICTURE = "chooses_a_picture";
+const REMOVES_PICTURE = "removes_a_picture";
+const SAVES_PAGE = "saves_the_website";
+const DISCARDS_PAGE = "discards_website_changes";
 
-const PARTS = [["requests", "Requests"], ["week", "Weekly hours"], ["blocked", "Blocked times"]];
+const PARTS = [["requests", "Requests"], ["week", "Weekly hours"], ["blocked", "Blocked times"], ["site", "Website"]];
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// what a new item of a list starts as
+const BLANK = { areas: { name: "", text: "" }, questions: { question: "", answer: "" } };
+let made = 0;
+const withIds = (page) => ({ ...page, ...Object.fromEntries(["areas", "questions", "steps"].map((list) => [list, page[list].map((item) => ({ ...item, _id: ++made }))])) });
+const withoutIds = (page) => ({ ...page, ...Object.fromEntries(["areas", "questions", "steps"].map((list) => [list, page[list].map(({ _id, ...item }) => item)])) });
 // weekday 0 is Sunday, as the platform counts; the week shown from Monday
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
@@ -51,6 +66,10 @@ class Diary extends Controller {
     this.blockTo = this.value("");
     this.busy = this.value(false);
     this.problem = this.value("");
+    this.page = this.value(null);      // the website as she is editing it
+    this.savedPage = this.value("");   // the website as last saved, to tell what changed
+    this.pageNote = this.value("");    // what the last save or picture came to
+    this.uploading = this.value("");   // which picture is uploading
     this.start();
   }
 
@@ -77,6 +96,7 @@ class Diary extends Controller {
     const settings = await this.office.settings();
     if (settings.data?.time_zone) this.zone.setValue(settings.data.time_zone);
     this.who.setValue("her");
+    await this.loadPage();
     await Promise.all([this.loadRequests(), this.loadWeek(), this.loadBlocked()]);
     this.office.listen(() => this.loadRequests());
   }
@@ -90,6 +110,45 @@ class Diary extends Controller {
   }
 
   async loadBlocked() { this.kept(await this.office.blocked(), this.blocked); }
+
+  /** The website as last saved, to edit; its session names used for her requests too. */
+  async loadPage() {
+    const found = await this.office.page();
+    if (!found.ok) { this.problem.setValue(found.error); return; }
+    useContent(found.data);
+    const page = merged(found.data);
+    this.savedPage.setValue(JSON.stringify(page));
+    this.page.setValue(withIds(page));
+  }
+
+  /** Whether the website has changes she hasn't saved. */
+  changed() {
+    const page = this.page.read();
+    return !!page && JSON.stringify(withoutIds(page)) !== this.savedPage.read();
+  }
+
+  editPage(payload) {
+    this.pageNote.setValue("");
+    this.page.update((page) => {
+      if (payload.list) return { ...page, [payload.list]: page[payload.list].map((item) => (item._id === payload.id ? { ...item, [payload.key]: payload.line } : item)) };
+      if (payload.session) {
+        const value = payload.key === "minutes" ? Number(payload.line) : payload.line;
+        return { ...page, sessions: { ...page.sessions, [payload.session]: { ...page.sessions[payload.session], [payload.key]: value } } };
+      }
+      return { ...page, [payload.key]: payload.line };
+    });
+  }
+
+  async choosePicture(which, file) {
+    this.uploading.setValue(which);
+    this.problem.setValue("");
+    this.pageNote.setValue("");
+    const kept = await this.office.uploadPicture(which, file);
+    this.uploading.setValue("");
+    if (!kept.ok) { this.problem.setValue(kept.error); return; }
+    this.page.update((page) => ({ ...page, [`${which}_picture`]: kept.data }));
+    this.pageNote.setValue("The picture is ready. Press Save to put it on your website.");
+  }
 
   kept(found, into) {
     if (found.ok) into.setValue(found.data);
@@ -107,11 +166,28 @@ class Diary extends Controller {
     return done.ok;
   }
 
-  answers() { return [SIGNS_OUT, SHOWS, ACCEPTS, DECLINES, CHOOSES_WEEKDAY, SETS_FROM, SETS_TO, ADDS_HOURS, REMOVES_HOURS, SETS_BLOCK_FROM, SETS_BLOCK_TO, BLOCKS, UNBLOCKS]; }
+  answers() {
+    return [SIGNS_OUT, SHOWS, ACCEPTS, DECLINES, CHOOSES_WEEKDAY, SETS_FROM, SETS_TO, ADDS_HOURS, REMOVES_HOURS, SETS_BLOCK_FROM, SETS_BLOCK_TO, BLOCKS, UNBLOCKS,
+      EDITS_PAGE, ADDS_ITEM, REMOVES_ITEM, CHOOSES_PICTURE, REMOVES_PICTURE, SAVES_PAGE, DISCARDS_PAGE];
+  }
 
-  would(action) {
-    const changes = [ACCEPTS, DECLINES, ADDS_HOURS, REMOVES_HOURS, BLOCKS, UNBLOCKS];
+  would(action, payload) {
+    const changes = [ACCEPTS, DECLINES, ADDS_HOURS, REMOVES_HOURS, BLOCKS, UNBLOCKS, SAVES_PAGE, DISCARDS_PAGE];
     if (changes.includes(action) && this.busy.read()) return Phrase.of("Saving");
+    if (action === CHOOSES_PICTURE && this.uploading.read()) return Phrase.of("A picture is uploading");
+    if (action === ADDS_ITEM && (this.page.read()?.[payload.list]?.length ?? 0) >= LIMITS.list) return Phrase.of("That's as many as fit");
+    if (action === DISCARDS_PAGE && !this.changed()) return Phrase.of("Nothing to undo");
+    if (action === SAVES_PAGE) {
+      const page = this.page.read();
+      if (this.uploading.read()) return Phrase.of("Wait for the picture to finish uploading");
+      if (!this.changed()) return Phrase.of("Nothing new to save");
+      if (!page.name.trim()) return Phrase.of("Your name can't be empty");
+      if (!EMAIL.test(page.email.trim())) return Phrase.of("Check the email address in the footer");
+      const [shortest, longest] = LIMITS.minutes;
+      if (SESSION_IDS.some((id) => !(Number.isInteger(page.sessions[id].minutes) && page.sessions[id].minutes >= shortest && page.sessions[id].minutes <= longest))) {
+        return Phrase.with("A session's length is in minutes, from %d to %d", [shortest, longest]);
+      }
+    }
     if (action === ADDS_HOURS && !(this.from.read() && this.to.read() && this.from.read() < this.to.read())) return Phrase.of("The hours must end after they start");
     if (action === BLOCKS && !(this.blockFrom.read() && this.blockTo.read())) return Phrase.of("Choose when it starts and ends");
     if (action === BLOCKS && this.blockFrom.read() >= this.blockTo.read()) return Phrase.of("It must end after it starts");
@@ -134,9 +210,25 @@ class Diary extends Controller {
         .then((done) => { if (done) { this.blockFrom.setValue(""); this.blockTo.setValue(""); } });
     }
     if (action === UNBLOCKS) this.change(() => this.office.unblock(payload.id), () => this.loadBlocked());
+    if (action === EDITS_PAGE) this.editPage(payload);
+    if (action === ADDS_ITEM) this.page.update((page) => ({ ...page, [payload.list]: [...page[payload.list], { ...BLANK[payload.list], _id: ++made }] }));
+    if (action === REMOVES_ITEM) this.page.update((page) => ({ ...page, [payload.list]: page[payload.list].filter((item) => item._id !== payload.id) }));
+    if (action === CHOOSES_PICTURE) {
+      if (!payload.file.type.startsWith("image/")) return Phrase.of("Please choose a picture (JPEG, PNG or WebP)");
+      this.choosePicture(payload.which, payload.file);
+    }
+    if (action === REMOVES_PICTURE) this.page.update((page) => ({ ...page, [`${payload.which}_picture`]: "" }));
+    if (action === DISCARDS_PAGE) { this.page.setValue(withIds(JSON.parse(this.savedPage.read()))); this.pageNote.setValue(""); }
+    if (action === SAVES_PAGE) {
+      const page = withoutIds(this.page.read());
+      const tidy = { ...page, name: page.name.trim(), email: page.email.trim() };
+      this.change(() => this.office.savePage(tidy), () => this.loadPage())
+        .then((done) => { if (done) this.pageNote.setValue("Saved. Your website shows it to everyone who opens it from now on."); });
+    }
     if (action === SIGNS_OUT) {
       this.office.signOut().then(() => {
         for (const value of [this.requests, this.week, this.blocked]) value.setValue([]);
+        this.page.setValue(null);
         this.userId.setValue("");
         this.problem.setValue("");
         this.who.setValue("out");
@@ -177,6 +269,13 @@ export class ShivonnesDiary extends ChimeApp {
       [SETS_BLOCK_TO]: ["To"],
       [BLOCKS]: ["Block this time"],
       [UNBLOCKS]: ["Remove"],
+      [EDITS_PAGE]: ["Change"],
+      [ADDS_ITEM]: ["Add"],
+      [REMOVES_ITEM]: ["Remove"],
+      [CHOOSES_PICTURE]: ["Choose a picture"],
+      [REMOVES_PICTURE]: ["Use the placeholder"],
+      [SAVES_PAGE]: ["Save"],
+      [DISCARDS_PAGE]: ["Undo changes"],
     });
   }
 
@@ -208,11 +307,12 @@ export class ShivonnesDiary extends ChimeApp {
     ]);
   }
 
-  probe() { return import("./probe.js?v=830936e87b82").then((made) => new made.Probe(this)); }
+  probe() { return import("./probe.js?v=53044441deda").then((made) => new made.Probe(this)); }
 
-  /** The app mounted: Google's button drawn whenever the sign-in shows. */
+  /** The app mounted: Google's button drawn whenever the sign-in shows; leaving with the website unsaved asks first. */
   mount(element) {
     super.mount(element);
+    addEventListener("beforeunload", (event) => { if (this.diary.changed()) { event.preventDefault(); event.returnValue = ""; } });
     this.chimes.follow({ region: Chimes.GLOBAL }, "google", () => {
       if (this.diary.who.read() !== "out") return;
       // once the sign-in stands: it is drawn a turn or two after the diary says so
@@ -254,10 +354,11 @@ export class ShivonnesDiary extends ChimeApp {
     const showing = (part) => diary.part.map((now) => now === part);
     return ui.column([
       parts,
-      ui.text(ui.bound(() => Phrase.with("Times are on your clock (%s).", [diary.zone.read()])), "SmallPrint"),
+      ui.when(diary.part.map((now) => now !== "site"), ui.text(ui.bound(() => Phrase.with("Times are on your clock (%s).", [diary.zone.read()])), "SmallPrint")),
       ui.when(showing("requests"), this.requestsPart()),
       ui.when(showing("week"), this.weekPart()),
       ui.when(showing("blocked"), this.blockedPart()),
+      ui.when(showing("site"), this.sitePart()),
     ], "Hers");
   }
 
@@ -331,6 +432,127 @@ export class ShivonnesDiary extends ChimeApp {
         ui.button(BLOCKS, { style: "PrimaryButton" }),
       ]),
     ], "Part");
+  }
+
+  // --- the website ---
+
+  sitePart() {
+    const ui = this.ui;
+    const diary = this.diary;
+    const text = (key, label, options) => this.editText(diary.page.map((page) => page?.[key] ?? ""), (line) => ({ key, line }), label, options);
+    const session = (id, key, label, options) => this.editText(diary.page.map((page) => page?.sessions[id][key] ?? ""), (line) => ({ session: id, key, line }), label, options);
+    const section = (title, content) => ui.surface("EditSection", [ui.text(title, "Subhead"), ...content]);
+    const state = ui.bound(() => {
+      if (diary.uploading.read()) return Phrase.of("Uploading the picture…");
+      if (diary.problem.read()) return diary.problem.read();
+      if (diary.pageNote.read()) return diary.pageNote.read();
+      if (diary.changed()) return Phrase.of("You have changes that aren't on your website yet.");
+      return Phrase.of("Your website shows everything here.");
+    });
+    const editor = ui.column([
+      ui.text(Phrase.of("Change the words and pictures on your website. Nothing changes on the website until you press Save."), "Body").wraps(),
+      ui.hyperlink("../", [ui.text(Phrase.of("Open your website ↗"))], "SecondaryButton OpenSite"),
+      section(Phrase.of("Top of the page"), [
+        text("name", Phrase.of("Your name")),
+        text("disciplines", Phrase.of("Under your name"), { hint: Phrase.of("Separate them with · or a comma.") }),
+        text("headline", Phrase.of("Headline"), { long: true }),
+        text("intro", Phrase.of("Introduction"), { long: true }),
+        this.pictureEdit("hero", Phrase.of("Picture beside the headline")),
+      ]),
+      section(Phrase.of("Who I work with"), [
+        text("areas_kicker", Phrase.of("Section name")),
+        text("areas_title", Phrase.of("Section heading"), { long: true }),
+        this.listEdit("areas", [["name", Phrase.of("Name"), false], ["text", Phrase.of("Words"), true]], Phrase.of("Add an area"), Phrase.of("Remove this area")),
+      ]),
+      section(Phrase.of("About"), [
+        text("about_kicker", Phrase.of("Section name (also in the menu)")),
+        this.pictureEdit("portrait", Phrase.of("Your portrait")),
+        text("about", Phrase.of("About you"), { long: true, tall: true, hint: Phrase.of("Leave an empty line between paragraphs.") }),
+        text("training_title", Phrase.of("Heading")),
+        text("training", Phrase.of("Training and registration"), { long: true }),
+      ]),
+      section(Phrase.of("How I work"), [
+        text("how_kicker", Phrase.of("Section name (also in the menu)")),
+        text("how_title", Phrase.of("Section heading"), { long: true }),
+        this.listEdit("steps", [["name", Phrase.of("Step"), false], ["text", Phrase.of("Words"), true]]),
+      ]),
+      section(Phrase.of("Fees"), [
+        text("fees_kicker", Phrase.of("Section name (also in the menu)")),
+        text("fees_title", Phrase.of("Section heading")),
+        ...SESSION_IDS.map((id) => ui.surface("EditItem", [
+          session(id, "name", Phrase.of("Session")),
+          ui.row([session(id, "minutes", Phrase.of("Minutes"), { kind: "number" }), session(id, "fee", Phrase.of("Fee"))], "EditPair"),
+          session(id, "text", Phrase.of("Words"), { long: true }),
+        ])),
+        text("fees_note", Phrase.of("Small print under the fees"), { long: true }),
+      ]),
+      section(Phrase.of("Questions"), [
+        text("questions_kicker", Phrase.of("Section name")),
+        text("questions_title", Phrase.of("Section heading")),
+        this.listEdit("questions", [["question", Phrase.of("Question"), false], ["answer", Phrase.of("Answer"), true]], Phrase.of("Add a question"), Phrase.of("Remove this question")),
+      ]),
+      section(Phrase.of("Invitation to book"), [
+        text("invitation_title", Phrase.of("Heading")),
+        text("invitation_text", Phrase.of("Words"), { long: true }),
+      ]),
+      section(Phrase.of("Footer"), [
+        text("credentials", Phrase.of("Under your name"), { long: true }),
+        text("email", Phrase.of("Contact email"), { kind: "email" }),
+        text("location", Phrase.of("Where you are"), { long: true }),
+        text("registration", Phrase.of("Registration"), { long: true }),
+        text("crisis", Phrase.of("Not an emergency service"), { long: true }),
+        text("land", Phrase.of("Land acknowledgement"), { long: true, hint: Phrase.of("Leave it empty to show none.") }),
+      ]),
+      ui.surface("SaveBar", [
+        ui.text(state, "SaveState").wraps(),
+        ui.row([
+          ui.pressable(DISCARDS_PAGE, {}, [ui.text(ui.words(DISCARDS_PAGE))], "SecondaryButton").absentWhenRefused(),
+          ui.button(SAVES_PAGE, { style: "PrimaryButton" }),
+        ], "SaveActions"),
+      ]),
+    ], "Part SiteEditor");
+    return ui.when(diary.page.map((page) => page !== null), editor, ui.text(Phrase.of("Opening your website…"), "SmallPrint"));
+  }
+
+  /** Words to edit: a line, or a box of lines given long. */
+  editText(shows, carries, label, { long = false, tall = false, hint = null, kind = "text" } = {}) {
+    const ui = this.ui;
+    const box = long
+      ? [ui.text(label, "EditLabel"), ui.area(EDITS_PAGE, shows, tall ? "EditArea Tall" : "EditArea", { carries })]
+      : [ui.field(EDITS_PAGE, "EditField", { label, changes: EDITS_PAGE, shows, carries, kind })];
+    return ui.column([...box, hint ? ui.text(hint, "Hint").wraps() : null].filter(Boolean), "Edit");
+  }
+
+  /** A list's items, each with its words; added to and taken from when it says how. */
+  listEdit(list, fields, adds = null, removes = null) {
+    const ui = this.ui;
+    const diary = this.diary;
+    const item = (handle) => ui.surface("EditItem", [
+      ...fields.map(([key, label, long]) => this.editText(handle.map((held) => held?.[key] ?? ""), (line) => ({ list, id: handle.read()?._id, key, line }), label, { long })),
+      removes ? ui.pressable(REMOVES_ITEM, handle.map((held) => ({ list, id: held?._id })), [ui.text(removes)], "SecondaryButton Small RemoveItem") : null,
+    ].filter(Boolean));
+    return ui.column([
+      ui.each(diary.page.map((page) => page?.[list] ?? []), item, (held) => held._id, "EditList"),
+      adds ? ui.pressable(ADDS_ITEM, { list }, [ui.text(adds)], "SecondaryButton AddItem") : null,
+    ].filter(Boolean), "EditListHolder");
+  }
+
+  /** A picture of the site's: as it is now, another chosen, or the placeholder put back; and its words for people who can't see it. */
+  pictureEdit(which, label) {
+    const ui = this.ui;
+    const diary = this.diary;
+    const path = diary.page.map((page) => page?.[`${which}_picture`] ?? "");
+    const shown = ui.bound(() => (path.read() && diary.office ? diary.office.pictureAddress(path.read()) : `../images/${which}.svg`));
+    const choosing = ui.bound(() => (diary.uploading.read() === which ? Phrase.of("Uploading…") : path.read() ? Phrase.of("Choose another picture") : Phrase.of("Choose a picture")));
+    return ui.surface("EditPicture", [
+      ui.text(label, "EditLabel"),
+      ui.image(shown, `EditPreview ${which}`, label),
+      ui.row([
+        ui.file(CHOOSES_PICTURE, choosing, { accept: "image/*", payload: { which }, style: "SecondaryButton" }),
+        ui.when(path.map((now) => !!now), ui.pressable(REMOVES_PICTURE, { which }, [ui.text(ui.words(REMOVES_PICTURE))], "SecondaryButton")),
+      ], "PictureActions"),
+      this.editText(diary.page.map((page) => page?.[`${which}_alt`] ?? ""), (line) => ({ key: `${which}_alt`, line }), Phrase.of("Describe the picture, for people who can't see it")),
+    ]);
   }
 }
 

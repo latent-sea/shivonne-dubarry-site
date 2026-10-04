@@ -1,6 +1,7 @@
 // Shivonne Dubarry: a counsellor's home page with a booking widget, on
-// gd-chime for the web. What it says is in content.js; this file is how it
-// is laid out.
+// gd-chime for the web. What it says and shows she edits in her diary; it is
+// read from the platform as the page opens, over the defaults in content.js.
+// This file is how it is laid out.
 //
 // Two screens. The home page scrolls through who she works with, About,
 // How I work, Fees and Questions; the header's links are addresses on it
@@ -10,10 +11,10 @@
 // her free ones, from the platform, shown in the visitor's own time zone. A
 // request holds its time until she answers. Sessions are online.
 
-import { ChimeApp, Chimes, Controller, Driver, Look, Phrase } from "./gd_chime/gd_chime.js?v=830936e87b82";
-import { ABOUT, AREAS, FEES_NOTE, QUESTIONS, SESSIONS, SITE, STEPS } from "./content.js?v=830936e87b82";
-import { Desk } from "./desk.js?v=830936e87b82";
-import { DARK, LIGHT } from "./palette.js?v=830936e87b82";
+import { ChimeApp, Chimes, Controller, Driver, Look, Phrase } from "./gd_chime/gd_chime.js?v=53044441deda";
+import { ABOUT, AREAS, FEES_NOTE, PAGE, QUESTIONS, SESSIONS, SITE, STEPS, useContent } from "./content.js?v=53044441deda";
+import { Desk, pictureAddress } from "./desk.js?v=53044441deda";
+import { DARK, LIGHT } from "./palette.js?v=53044441deda";
 
 const HOME = "home";
 const BOOK = "book";
@@ -171,9 +172,7 @@ export class ShivonneDubarry extends ChimeApp {
 
   describe() {
     const ui = this.ui;
-    // walked by its probe (?probe), the page is handed a stand-in desk and sends nothing
-    const probing = new URLSearchParams(location.search).has("probe");
-    this.booking = this.model(new Booking(this.chimes, probing ? null : new Desk()));
+    this.booking = this.model(new Booking(this.chimes, desk));
 
     const header = ui.column([
       ui.row([
@@ -182,9 +181,9 @@ export class ShivonneDubarry extends ChimeApp {
           ui.text(SITE.disciplines.join(" · "), "Disciplines"),
         ], "Brand").grow(),
         ui.row([
-          this.anchor("about", Phrase.of("About"), "NavLink"),
-          this.anchor("how", Phrase.of("How I work"), "NavLink"),
-          this.anchor("fees", Phrase.of("Fees"), "NavLink"),
+          this.anchor("about", PAGE.about_kicker, "NavLink"),
+          this.anchor("how", PAGE.how_kicker, "NavLink"),
+          this.anchor("fees", PAGE.fees_kicker, "NavLink"),
           ui.button(BOOKS, { goes_to: BOOK, style: "PrimaryButton" }),
         ], "Nav"),
       ], "MastRow"),
@@ -210,7 +209,7 @@ export class ShivonneDubarry extends ChimeApp {
   }
 
   // loaded only when the page is walked (?probe), so an export leaves it out
-  probe() { return import("./probe.js?v=830936e87b82").then((made) => new made.Probe(this)); }
+  probe() { return import("./probe.js?v=53044441deda").then((made) => new made.Probe(this)); }
 
   /** The app mounted, then its address kept: #book opens booking, a section's address scrolls to it. */
   mount(element) {
@@ -255,6 +254,13 @@ export class ShivonneDubarry extends ChimeApp {
 
   bookButton() { return this.ui.button(BOOKS, { goes_to: BOOK, style: "PrimaryButton" }); }
 
+  /** Her picture for this place on the page, or the placeholder while she has none. */
+  picture(which, style, placeholder) {
+    const path = PAGE[`${which}_picture`];
+    if (!path) return this.ui.image(placeholder, `${style} Placeholder`, which === "portrait" ? "Portrait placeholder" : "Image placeholder");
+    return this.ui.image(pictureAddress(path), style, PAGE[`${which}_alt`]);
+  }
+
   // --- the home page ---
 
   home() {
@@ -264,32 +270,32 @@ export class ShivonneDubarry extends ChimeApp {
         ui.column([
           ui.text(SITE.headline, "Headline").wraps(),
           ui.text(SITE.intro, "Lead").wraps(),
-          ui.row([this.bookButton(), this.anchor("how", Phrase.of("How I work"), "SecondaryButton")], "Actions"),
+          ui.row([this.bookButton(), this.anchor("how", PAGE.how_kicker, "SecondaryButton")], "Actions"),
         ], "HeroText"),
-        ui.image("images/hero.svg", "HeroImage", "Image placeholder"),
+        this.picture("hero", "HeroImage", "images/hero.svg"),
       ]),
 
-      this.section("areas", Phrase.of("Who I work with"), Phrase.of("Areas placeholder: a line introducing the people she works with."), [
+      this.section("areas", PAGE.areas_kicker, PAGE.areas_title, [
         ui.grid(AREAS.map((area) => ui.surface(`Area a-${area.id}`, [
           ui.text(area.name, "AreaName").wraps(),
           ui.text(area.text, "AreaText").wraps(),
         ])), [], "Areas"),
       ]),
 
-      this.section("about", Phrase.of("About"), null, [
+      this.section("about", PAGE.about_kicker, null, [
         ui.surface("AboutGrid", [
-          ui.image("images/portrait.svg", "Portrait", "Portrait placeholder"),
+          this.picture("portrait", "Portrait", "images/portrait.svg"),
           ui.column([
             ui.text(SITE.name, "SectionTitle").wraps(),
             ui.row(SITE.disciplines.map((discipline) => ui.text(discipline, "Discipline")), "Disciplines Row"),
             ...ABOUT.paragraphs.map((words) => ui.text(words, "Body").wraps()),
-            ui.text(Phrase.of("Training and registration"), "Subhead"),
+            ui.text(PAGE.training_title, "Subhead"),
             ui.text(ABOUT.training, "Body").wraps(),
           ], "AboutText"),
         ]),
       ]),
 
-      this.section("how", Phrase.of("How I work"), Phrase.of("How sessions work placeholder: a line in her words."), [
+      this.section("how", PAGE.how_kicker, PAGE.how_title, [
         ui.row(STEPS.map((step, index) => ui.column([
           ui.text(String(index + 1), "StepNumber"),
           ui.text(step.name, "StepName"),
@@ -297,7 +303,7 @@ export class ShivonneDubarry extends ChimeApp {
         ], "Step")), "Steps"),
       ]),
 
-      this.section("fees", Phrase.of("Fees"), Phrase.of("Sessions and fees"), [
+      this.section("fees", PAGE.fees_kicker, PAGE.fees_title, [
         ui.column(SESSIONS.map((session) => ui.row([
           ui.column([ui.text(session.name, "FeeName"), ui.text(session.text, "FeeText").wraps()], "FeeWords").grow(),
           ui.text(Phrase.with("%d min", [session.minutes]), "FeeLength"),
@@ -306,14 +312,14 @@ export class ShivonneDubarry extends ChimeApp {
         ui.text(FEES_NOTE, "SmallPrint").wraps(),
       ]),
 
-      this.section("questions", Phrase.of("Questions"), Phrase.of("Common questions"), [
+      this.section("questions", PAGE.questions_kicker, PAGE.questions_title, [
         ui.column(QUESTIONS.map(([question, answer]) => this.question(question, answer)), "Questions"),
       ]),
 
       ui.surface("Invitation", [
         ui.column([
-          ui.text(Phrase.of("When you're ready"), "InvitationTitle").wraps(),
-          ui.text(Phrase.of("Placeholder: a line inviting people to book, in her words."), "Lead").wraps(),
+          ui.text(PAGE.invitation_title, "InvitationTitle").wraps(),
+          ui.text(PAGE.invitation_text, "Lead").wraps(),
         ], "InvitationText"),
         this.bookButton(),
       ]),
@@ -438,4 +444,10 @@ export class ShivonneDubarry extends ChimeApp {
   }
 }
 
+// walked by its probe (?probe), the page is handed a stand-in desk, sends nothing, and shows the words here
+const probing = new URLSearchParams(location.search).has("probe");
+const desk = probing ? null : new Desk();
+// her words and pictures, as she last saved them; the page waits for them a little, never long
+if (desk) useContent(await desk.page());
+document.title = SITE.name;
 ChimeApp.start(ShivonneDubarry, document.getElementById("app"));

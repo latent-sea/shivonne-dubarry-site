@@ -4,8 +4,9 @@
 // she may see and change is decided on the platform, by her account (or its
 // verified email address) being on her staff lists.
 
-import { Backend } from "../backend/backend.js?v=830936e87b82";
-import { drawGoogleButton } from "../backend/google.js?v=830936e87b82";
+import { Backend } from "../backend/backend.js?v=53044441deda";
+import { shrinkPicture } from "../backend/pictures.js?v=53044441deda";
+import { drawGoogleButton } from "../backend/google.js?v=53044441deda";
 
 // public: the platform's address, its publishable key, and the Google client the platform accepts
 const PLATFORM = "https://api.latent-sea.com";
@@ -67,6 +68,22 @@ export class Office {
   async block(startsLocal, endsLocal) { return answer(await this.backend.callRpc("shivonne_dubarry_block", { starts_local: startsLocal, ends_local: endsLocal })); }
 
   async unblock(id) { return answer(await this.backend.delete("shivonne_dubarry_blocked", `id=eq.${encodeURIComponent(id)}`)); }
+
+  /** The site's words and pictures as she last saved them (null: never saved). */
+  async page() { return answer(await this.backend.callRpc("shivonne_dubarry_page")); }
+
+  /** The site's words and pictures saved, as the newest of her saves. */
+  async savePage(content) { return answer(await this.backend.insert("shivonne_dubarry_pages", { content })); }
+
+  /** A picture for the site uploaded into her folder, made small first: its path there, to save in the page. */
+  async uploadPicture(which, file) {
+    const name = `${which}-${crypto.randomUUID()}.jpg`;
+    const reply = await this.backend.uploadPicture(name, await shrinkPicture(file, 1800));
+    if (reply.status === 413) return { ok: false, data: null, error: "That picture is too big. Please choose one under 5 MB." };
+    return { ...answer(reply), data: reply.ok ? `${this.userId()}/${name}` : null };
+  }
+
+  pictureAddress(path) { return this.backend.pictureAddress(path); }
 
   /** Told whenever a request comes, changes or goes. */
   listen(changed) {

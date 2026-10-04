@@ -3,15 +3,28 @@
 // page asks the desk for her free times and hands it a request; what a
 // visitor may see or do is decided on the platform, not here.
 
-import { Backend } from "./backend/backend.js?v=830936e87b82";
+import { Backend } from "./backend/backend.js?v=53044441deda";
 
 // public: the platform's address and its publishable key belong in the page
 const PLATFORM = "https://api.latent-sea.com";
 const KEY = "sb_publishable_BqVtSYE4ysOb2sHMuFSwMk_HrTAUgLx";
 
+// how long the page waits for her words before showing the defaults
+const PAGE_WAIT_MS = 4000;
+
+/** Where anyone sees one of her pictures, by its path in the platform's pictures. */
+export function pictureAddress(path) { return `${PLATFORM}/storage/v1/object/public/pictures/${encodeURI(path)}`; }
+
 export class Desk {
   constructor(backend = new Backend(PLATFORM, KEY)) {
     this.backend = backend;
+  }
+
+  /** Her words and pictures as she last saved them, or null: none saved, or the platform slow or unreachable. */
+  async page() {
+    const late = new Promise((done) => setTimeout(() => done(null), PAGE_WAIT_MS));
+    const reply = await Promise.race([this.backend.callRpc("shivonne_dubarry_page").catch(() => null), late]);
+    return reply?.ok ? reply.data : null;
   }
 
   /** Her free times, soonest first: { ok, times: [{ at, ends }], error }. */
