@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" role="img" aria-label="Portrait placeholder">
+<rect width="800" height="1000" fill="#ebe2d9"/>
+<rect x="32" y="32" width="736" height="936" fill="none" stroke="#cdbfb2" stroke-width="3"/>
+<text x="400" y="512" text-anchor="middle" font-family="system-ui, sans-serif" font-size="40" fill="#6c6158" letter-spacing="4">PORTRAIT PLACEHOLDER</text>
+</svg>

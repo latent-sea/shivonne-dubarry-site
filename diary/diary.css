@@ -1,0 +1,24 @@
+/* Her diary: the page's own look (../shivonne.css), and the few parts only the diary has. */
+
+#app .SignIn, #app .Stranger, #app .Hers, #app .Part { gap: 1.25rem; align-items: flex-start; }
+#app .Hers, #app .Part { align-items: stretch; }
+#app .GoogleButton { min-height: 44px; }
+#app .AccountId { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: var(--step-0); padding: 0.75rem 1rem; background: var(--tint); border-radius: var(--radius); user-select: all; word-break: break-all; }
+#app .Problem { color: var(--chime-warn); font-weight: 600; }
+
+#app .Parts, #app .Weekdays, #app .TimeFields, #app .RequestActions { gap: 0.5rem; flex-wrap: wrap; }
+#app .TimeFields { gap: 1rem; }
+
+#app .Requests, #app .HoursList { gap: 0.75rem; }
+#app .chime-surface.Request { display: flex; flex-direction: column; gap: 0.35rem; padding: 1rem 1.25rem; border: 1px solid var(--chime-edge); border-radius: var(--radius); }
+#app .RequestHead { gap: 0.5rem 1rem; flex-wrap: wrap; align-items: baseline; }
+#app .RequestWhen { font-size: var(--step-1); font-weight: 700; }
+#app .Status { font-size: var(--step--1); font-weight: 700; color: var(--chime-accent); }
+#app .RequestSession, #app .RequestPhone { color: var(--chime-ink-soft); }
+#app .RequestName { font-weight: 600; }
+#app .RequestActions { margin-top: 0.5rem; }
+
+#app .HoursRow { gap: 0.5rem 1rem; align-items: center; flex-wrap: wrap; padding: 0.5rem 0; border-top: 1px solid var(--chime-edge); }
+#app .HoursDay { flex: 0 0 7rem; font-weight: 700; }
+#app .chime-pressable.Small { min-height: 2.25rem; padding: 0.25rem 0.9rem; }
+#app .chime-surface.AddForm { display: flex; flex-direction: column; gap: 1rem; padding: 1.25rem; background: var(--tint); border-radius: var(--radius); align-items: flex-start; }
