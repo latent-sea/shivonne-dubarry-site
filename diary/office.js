@@ -1,11 +1,11 @@
 // Her diary's way to the platform: signing in with Google, then her
 // requests, her week and the times she blocks out (backend.sql), through the
 // platform's client (../backend/). Every answer is { ok, data, error }; what
-// she may see and change is decided on the platform, by her account being
-// in shivonne_dubarry_staff.
+// she may see and change is decided on the platform, by her account (or its
+// verified email address) being on her staff lists.
 
-import { Backend } from "../backend/backend.js?v=76699891b1bf";
-import { drawGoogleButton } from "../backend/google.js?v=76699891b1bf";
+import { Backend } from "../backend/backend.js?v=830936e87b82";
+import { drawGoogleButton } from "../backend/google.js?v=830936e87b82";
 
 // public: the platform's address, its publishable key, and the Google client the platform accepts
 const PLATFORM = "https://api.latent-sea.com";
@@ -34,10 +34,10 @@ export class Office {
     await this.backend.signOut();
   }
 
-  /** Whether this account is hers: it can see its own staff row only if it has one. */
+  /** Whether this account is hers, as the platform decides it: by its id, or by its verified email address. */
   async isHers() {
-    const reply = await this.backend.select("shivonne_dubarry_staff", `user_id=eq.${encodeURIComponent(this.userId())}`);
-    return { ok: reply.ok, data: reply.ok && reply.data.length > 0, error: answer(reply).error };
+    const reply = await this.backend.callRpc("shivonne_dubarry_is_staff");
+    return { ok: reply.ok, data: reply.ok && reply.data === true, error: answer(reply).error };
   }
 
   async settings() {

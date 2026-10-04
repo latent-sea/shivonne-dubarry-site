@@ -4,12 +4,13 @@
 // time is shown and typed on her clock (her time zone, in backend.sql's
 // settings). Anyone else who signs in is told the account isn't set up, and
 // shown its id: the id that, put in shivonne_dubarry_staff, makes an account
-// hers.
+// hers - as her verified email address does, put in
+// shivonne_dubarry_staff_emails, even before she first signs in.
 
-import { ChimeApp, Chimes, Controller, Look, Phrase } from "../gd_chime/gd_chime.js?v=76699891b1bf";
-import { SESSIONS } from "../content.js?v=76699891b1bf";
-import { DARK, LIGHT } from "../palette.js?v=76699891b1bf";
-import { Office } from "./office.js?v=76699891b1bf";
+import { ChimeApp, Chimes, Controller, Look, Phrase } from "../gd_chime/gd_chime.js?v=830936e87b82";
+import { SESSIONS } from "../content.js?v=830936e87b82";
+import { DARK, LIGHT } from "../palette.js?v=830936e87b82";
+import { Office } from "./office.js?v=830936e87b82";
 
 const SIGNS_OUT = "signs_out";
 const SHOWS = "shows_a_part";
@@ -207,7 +208,7 @@ export class ShivonnesDiary extends ChimeApp {
     ]);
   }
 
-  probe() { return import("./probe.js?v=76699891b1bf").then((made) => new made.Probe(this)); }
+  probe() { return import("./probe.js?v=830936e87b82").then((made) => new made.Probe(this)); }
 
   /** The app mounted: Google's button drawn whenever the sign-in shows. */
   mount(element) {
@@ -240,7 +241,7 @@ export class ShivonnesDiary extends ChimeApp {
     const ui = this.ui;
     return ui.column([
       ui.text(Phrase.of("This account isn't set up for the diary"), "PageTitle").wraps(),
-      ui.text(Phrase.of("If this is your account, Shivonne, send this number to Ian so he can set it up:"), "Body").wraps(),
+      ui.text(Phrase.of("If this is your account, Shivonne, ask Ian to add the email address you signed in with, or send him this number:"), "Body").wraps(),
       ui.text(this.diary.userId, "AccountId"),
     ], "Stranger");
   }
