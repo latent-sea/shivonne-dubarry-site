@@ -6,10 +6,10 @@
 // shown its id: the id that, put in shivonne_dubarry_staff, makes an account
 // hers.
 
-import { ChimeApp, Chimes, Controller, Look, Phrase } from "../gd_chime/gd_chime.js?v=de82c6f0fdd5";
-import { SESSIONS } from "../content.js?v=de82c6f0fdd5";
-import { DARK, LIGHT } from "../palette.js?v=de82c6f0fdd5";
-import { Office } from "./office.js?v=de82c6f0fdd5";
+import { ChimeApp, Chimes, Controller, Look, Phrase } from "../gd_chime/gd_chime.js?v=76699891b1bf";
+import { SESSIONS } from "../content.js?v=76699891b1bf";
+import { DARK, LIGHT } from "../palette.js?v=76699891b1bf";
+import { Office } from "./office.js?v=76699891b1bf";
 
 const SIGNS_OUT = "signs_out";
 const SHOWS = "shows_a_part";
@@ -207,7 +207,7 @@ export class ShivonnesDiary extends ChimeApp {
     ]);
   }
 
-  probe() { return import("./probe.js?v=de82c6f0fdd5").then((made) => new made.Probe(this)); }
+  probe() { return import("./probe.js?v=76699891b1bf").then((made) => new made.Probe(this)); }
 
   /** The app mounted: Google's button drawn whenever the sign-in shows. */
   mount(element) {

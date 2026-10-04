@@ -4,8 +4,8 @@
 // she may see and change is decided on the platform, by her account being
 // in shivonne_dubarry_staff.
 
-import { Backend } from "../backend/backend.js?v=de82c6f0fdd5";
-import { drawGoogleButton } from "../backend/google.js?v=de82c6f0fdd5";
+import { Backend } from "../backend/backend.js?v=76699891b1bf";
+import { drawGoogleButton } from "../backend/google.js?v=76699891b1bf";
 
 // public: the platform's address, its publishable key, and the Google client the platform accepts
 const PLATFORM = "https://api.latent-sea.com";
