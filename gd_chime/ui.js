@@ -24,17 +24,17 @@
 // is a function of the parameter it is entered with, handed in as a bound
 // value. Every pop-up owns its way out: CLOSES, which goes back.
 
-import { Bound } from "./bound.js";
-import { Chimes } from "./chimes.js";
-import { Desc } from "./desc.js";
-import { Driver } from "./driver.js";
-import { Frames } from "./frames.js";
-import { Language } from "./language.js";
-import { OwnBell } from "./own_bell.js";
-import { Phrase } from "./phrase.js";
-import { Place } from "./place.js";
-import { Pressables, Themes } from "./themes.js";
-import { Value } from "./value.js";
+import { Bound } from "./bound.js?v=de82c6f0fdd5";
+import { Chimes } from "./chimes.js?v=de82c6f0fdd5";
+import { Desc } from "./desc.js?v=de82c6f0fdd5";
+import { Driver } from "./driver.js?v=de82c6f0fdd5";
+import { Frames } from "./frames.js?v=de82c6f0fdd5";
+import { Language } from "./language.js?v=de82c6f0fdd5";
+import { OwnBell } from "./own_bell.js?v=de82c6f0fdd5";
+import { Phrase } from "./phrase.js?v=de82c6f0fdd5";
+import { Place } from "./place.js?v=de82c6f0fdd5";
+import { Pressables, Themes } from "./themes.js?v=de82c6f0fdd5";
+import { Value } from "./value.js?v=de82c6f0fdd5";
 
 const DRAWN = "drawn";
 let fieldsMade = 0; // every field's own id, so its label names it
@@ -176,7 +176,8 @@ export class Ui {
   }
 
   /** Lines typed into: each change dispatches the action with {line}; it shows the bound value. */
-  area(action, shows, style = "TextArea") { return new Desc("area", { action, shows, style }); }
+  /** A box of lines; carries, if given, turns what is typed into the payload ({ line } otherwise). */
+  area(action, shows, style = "TextArea", { carries = null } = {}) { return new Desc("area", { action, shows, style, carries }); }
 
   // --- layout ---
 
@@ -657,13 +658,13 @@ const BUILDERS = {
   },
 
   area(ui, desc, parent) {
-    const { action, shows, style } = desc.props;
+    const { action, shows, style, carries } = desc.props;
     const place = ui._place;
     if (!place.performs.has(action)) place.performs.set(action, "");
     const made = el(parent, "textarea", `chime-field ${styleOf(style)}`);
     made.dataset.action = action;
     ui.draws(made, () => { const value = shows.read() ?? ""; if (made.value !== String(value)) made.value = String(value); });
-    made.addEventListener("input", () => ui.commands.dispatch(place.name, action, { line: made.value }));
+    made.addEventListener("input", () => ui.commands.dispatch(place.name, action, carries ? carries(made.value) : { line: made.value }));
     return made;
   },
 

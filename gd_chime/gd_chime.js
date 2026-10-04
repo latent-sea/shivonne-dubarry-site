@@ -4,7 +4,7 @@
 //
 // gd-chime for the web. MIT licensed; see LICENCE beside this file.
 //
-//     import { ChimeApp, Controller, Phrase, Themes } from "./gd_chime/gd_chime.js";
+//     import { ChimeApp, Controller, Phrase, Themes } from "./gd_chime/gd_chime.js?v=de82c6f0fdd5";
 //
 // A name here is a promise: what an application may use is exactly what
 // this file exports. Everything else in the folder is internal.
@@ -23,21 +23,21 @@
 //   Language, Frames.
 // - The walk: Walk, which a site's probe extends.
 
-export { Actions } from "./actions.js";
-export { Bound } from "./bound.js";
-export { ChimeApp } from "./chime_app.js";
-export { Chimes } from "./chimes.js";
-export { Commands } from "./commands.js";
-export { Controller } from "./controller.js";
-export { Desc } from "./desc.js";
-export { Driver } from "./driver.js";
-export { Frames } from "./frames.js";
-export { Language } from "./language.js";
-export { Look, PALETTE } from "./look.js";
-export { Phrase } from "./phrase.js";
-export { Fields, Navigation, Overlays, Pressables, Themes } from "./themes.js";
-export { Ui } from "./ui.js";
-export { Walk } from "./walk.js";
+export { Actions } from "./actions.js?v=de82c6f0fdd5";
+export { Bound } from "./bound.js?v=de82c6f0fdd5";
+export { ChimeApp } from "./chime_app.js?v=de82c6f0fdd5";
+export { Chimes } from "./chimes.js?v=de82c6f0fdd5";
+export { Commands } from "./commands.js?v=de82c6f0fdd5";
+export { Controller } from "./controller.js?v=de82c6f0fdd5";
+export { Desc } from "./desc.js?v=de82c6f0fdd5";
+export { Driver } from "./driver.js?v=de82c6f0fdd5";
+export { Frames } from "./frames.js?v=de82c6f0fdd5";
+export { Language } from "./language.js?v=de82c6f0fdd5";
+export { Look, PALETTE } from "./look.js?v=de82c6f0fdd5";
+export { Phrase } from "./phrase.js?v=de82c6f0fdd5";
+export { Fields, Navigation, Overlays, Pressables, Themes } from "./themes.js?v=de82c6f0fdd5";
+export { Ui } from "./ui.js?v=de82c6f0fdd5";
+export { Walk } from "./walk.js?v=de82c6f0fdd5";
 
 /** The version of gd-chime this is a port of, and of the port. */
 export const VERSION = "0.1.0";
