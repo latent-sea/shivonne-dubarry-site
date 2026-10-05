@@ -11,10 +11,10 @@
 // her free ones, from the platform, shown in the visitor's own time zone. A
 // request holds its time until she answers. Sessions are online.
 
-import { ChimeApp, Chimes, Controller, Driver, Look, Phrase } from "./gd_chime/gd_chime.js?v=53044441deda";
-import { ABOUT, AREAS, FEES_NOTE, PAGE, QUESTIONS, SESSIONS, SITE, STEPS, useContent } from "./content.js?v=53044441deda";
-import { Desk, pictureAddress } from "./desk.js?v=53044441deda";
-import { DARK, LIGHT } from "./palette.js?v=53044441deda";
+import { ChimeApp, Chimes, Controller, Driver, Look, Phrase } from "./gd_chime/gd_chime.js?v=bc4fc810e8be";
+import { ABOUT, AREAS, FEES_NOTE, PAGE, QUESTIONS, SESSIONS, SITE, STEPS, useContent } from "./content.js?v=bc4fc810e8be";
+import { Desk, pictureAddress } from "./desk.js?v=bc4fc810e8be";
+import { DARK, LIGHT } from "./palette.js?v=bc4fc810e8be";
 
 const HOME = "home";
 const BOOK = "book";
@@ -209,7 +209,7 @@ export class ShivonneDubarry extends ChimeApp {
   }
 
   // loaded only when the page is walked (?probe), so an export leaves it out
-  probe() { return import("./probe.js?v=53044441deda").then((made) => new made.Probe(this)); }
+  probe() { return import("./probe.js?v=bc4fc810e8be").then((made) => new made.Probe(this)); }
 
   /** The app mounted, then its address kept: #book opens booking, a section's address scrolls to it. */
   mount(element) {

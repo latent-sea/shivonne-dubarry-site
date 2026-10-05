@@ -4,9 +4,9 @@
 // she may see and change is decided on the platform, by her account (or its
 // verified email address) being on her staff lists.
 
-import { Backend } from "../backend/backend.js?v=53044441deda";
-import { shrinkPicture } from "../backend/pictures.js?v=53044441deda";
-import { drawGoogleButton } from "../backend/google.js?v=53044441deda";
+import { Backend } from "../backend/backend.js?v=bc4fc810e8be";
+import { shrinkPicture } from "../backend/pictures.js?v=bc4fc810e8be";
+import { drawGoogleButton } from "../backend/google.js?v=bc4fc810e8be";
 
 // public: the platform's address, its publishable key, and the Google client the platform accepts
 const PLATFORM = "https://api.latent-sea.com";
