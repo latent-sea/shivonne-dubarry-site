@@ -9,10 +9,10 @@
 // hers - as her verified email address does, put in
 // shivonne_dubarry_staff_emails, even before she first signs in.
 
-import { ChimeApp, Chimes, Controller, Look, Phrase } from "../gd_chime/gd_chime.js?v=6469e17ad8c5";
-import { LIMITS, SESSIONS, SESSION_IDS, merged, useContent } from "../content.js?v=6469e17ad8c5";
-import { DARK, LIGHT } from "../palette.js?v=6469e17ad8c5";
-import { Office } from "./office.js?v=6469e17ad8c5";
+import { ChimeApp, Chimes, Controller, Look, Phrase } from "../gd_chime/gd_chime.js?v=1c3e3c9495e7";
+import { LIMITS, SESSIONS, SESSION_IDS, merged, useContent } from "../content.js?v=1c3e3c9495e7";
+import { DARK, LIGHT } from "../palette.js?v=1c3e3c9495e7";
+import { Office } from "./office.js?v=1c3e3c9495e7";
 
 const SIGNS_OUT = "signs_out";
 const SHOWS = "shows_a_part";
@@ -307,7 +307,7 @@ export class ShivonnesDiary extends ChimeApp {
     ]);
   }
 
-  probe() { return import("./probe.js?v=6469e17ad8c5").then((made) => new made.Probe(this)); }
+  probe() { return import("./probe.js?v=1c3e3c9495e7").then((made) => new made.Probe(this)); }
 
   /** The app mounted: Google's button drawn whenever the sign-in shows; leaving with the website unsaved asks first. */
   mount(element) {

@@ -11,10 +11,10 @@
 // her free ones, from the platform, shown in the visitor's own time zone. A
 // request holds its time until she answers. Sessions are online.
 
-import { ChimeApp, Chimes, Controller, Driver, Look, Phrase } from "./gd_chime/gd_chime.js?v=6469e17ad8c5";
-import { ABOUT, AREAS, FEES_NOTE, PAGE, QUESTIONS, SESSIONS, SITE, STEPS, useContent } from "./content.js?v=6469e17ad8c5";
-import { Desk, pictureAddress } from "./desk.js?v=6469e17ad8c5";
-import { DARK, LIGHT } from "./palette.js?v=6469e17ad8c5";
+import { ChimeApp, Chimes, Controller, Driver, Look, Phrase } from "./gd_chime/gd_chime.js?v=1c3e3c9495e7";
+import { ABOUT, AREAS, FEES_NOTE, PAGE, QUESTIONS, SESSIONS, SITE, STEPS, useContent } from "./content.js?v=1c3e3c9495e7";
+import { Desk, pictureAddress } from "./desk.js?v=1c3e3c9495e7";
+import { DARK, LIGHT } from "./palette.js?v=1c3e3c9495e7";
 
 const HOME = "home";
 const BOOK = "book";
@@ -209,7 +209,7 @@ export class ShivonneDubarry extends ChimeApp {
   }
 
   // loaded only when the page is walked (?probe), so an export leaves it out
-  probe() { return import("./probe.js?v=6469e17ad8c5").then((made) => new made.Probe(this)); }
+  probe() { return import("./probe.js?v=1c3e3c9495e7").then((made) => new made.Probe(this)); }
 
   /** The app mounted, then its address kept: #book opens booking, a section's address scrolls to it. */
   mount(element) {
