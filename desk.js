@@ -3,7 +3,7 @@
 // page asks the desk for her free times and hands it a request; what a
 // visitor may see or do is decided on the platform, not here.
 
-import { Backend } from "./backend/backend.js?v=db8455ec3601";
+import { Backend } from "./backend/backend.js?v=d4ebff82ca94";
 
 // public: the platform's address and its publishable key belong in the page
 const PLATFORM = "https://api.latent-sea.com";
