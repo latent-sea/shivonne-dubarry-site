@@ -11,10 +11,10 @@
 // her free ones, from the platform, shown in the visitor's own time zone. A
 // request holds its time until she answers. Sessions are online.
 
-import { ChimeApp, Chimes, Controller, Driver, Look, Phrase } from "./gd_chime/gd_chime.js?v=d4ebff82ca94";
-import { ABOUT, AREAS, FEES_NOTE, PAGE, QUESTIONS, SESSIONS, SITE, STEPS, useContent } from "./content.js?v=d4ebff82ca94";
-import { Desk, pictureAddress } from "./desk.js?v=d4ebff82ca94";
-import { DARK, LIGHT } from "./palette.js?v=d4ebff82ca94";
+import { ChimeApp, Chimes, Controller, Driver, Look, Phrase } from "./gd_chime/gd_chime.js?v=e2c8452e3e30";
+import { ABOUT, AREAS, FEES_NOTE, PAGE, QUESTIONS, SESSIONS, SITE, STEPS, runs, useContent } from "./content.js?v=e2c8452e3e30";
+import { Desk, pictureAddress } from "./desk.js?v=e2c8452e3e30";
+import { DARK, LIGHT } from "./palette.js?v=e2c8452e3e30";
 
 const HOME = "home";
 const BOOK = "book";
@@ -209,7 +209,7 @@ export class ShivonneDubarry extends ChimeApp {
   }
 
   // loaded only when the page is walked (?probe), so an export leaves it out
-  probe() { return import("./probe.js?v=d4ebff82ca94").then((made) => new made.Probe(this)); }
+  probe() { return import("./probe.js?v=e2c8452e3e30").then((made) => new made.Probe(this)); }
 
   /** The app mounted, then its address kept: #book opens booking, a section's address scrolls to it. */
   mount(element) {
@@ -242,6 +242,12 @@ export class ShivonneDubarry extends ChimeApp {
   /** A link to a section of the home page, by its address. */
   anchor(section, words, style) {
     return this.ui.hyperlink(`#${section}`, [this.ui.text(words, style === "NavLink" ? "NavWords" : "")], style, { stays: true });
+  }
+
+  /** A paragraph of her words, with the links she wrote in them ([words](address), or an address alone). */
+  linked(words) {
+    const ui = this.ui;
+    return ui.paragraph(runs(words).map((run) => run.href ? ui.hyperlink(run.href, [ui.text(run.words, "InlineLinkWords")], "InlineLink") : run.words), "Body");
   }
 
   section(id, kicker, title, content, style = "") {
@@ -288,9 +294,9 @@ export class ShivonneDubarry extends ChimeApp {
           ui.column([
             ui.text(SITE.name, "SectionTitle").wraps(),
             ui.row(SITE.disciplines.map((discipline) => ui.text(discipline, "Discipline")), "Disciplines Row"),
-            ...ABOUT.paragraphs.map((words) => ui.text(words, "Body").wraps()),
+            ...ABOUT.paragraphs.map((words) => this.linked(words)),
             ui.text(PAGE.training_title, "Subhead"),
-            ui.text(ABOUT.training, "Body").wraps(),
+            this.linked(ABOUT.training),
           ], "AboutText"),
         ]),
       ]),

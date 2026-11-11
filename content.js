@@ -139,4 +139,25 @@ export function paragraphs(text) {
   return String(text).split(/\n\s*\n/).map((each) => each.trim()).filter(Boolean);
 }
 
+/**
+ * Words cut into runs of plain words and links, for a paragraph of the page.
+ * She writes a link as [the words](the address), as on most websites' editors,
+ * and an address written on its own is a link to itself. Only web and mail
+ * addresses are links; anything else stays as she wrote it.
+ */
+export function runs(text) {
+  const made = [];
+  const plain = (words) => { if (words) made.push({ words }); };
+  const LINK = /\[([^\]\n]+)\]\(\s*((?:https?:\/\/|mailto:)[^\s)]+)\s*\)|((?:https?:\/\/|www\.)[^\s<>()]*[^\s<>().,;:!?'"])/gi;
+  let from = 0;
+  for (const found of String(text).matchAll(LINK)) {
+    plain(found.input.slice(from, found.index));
+    if (found[1]) made.push({ words: found[1], href: found[2] });
+    else made.push({ words: found[3], href: /^www\./i.test(found[3]) ? `https://${found[3]}` : found[3] });
+    from = found.index + found[0].length;
+  }
+  plain(String(text).slice(from));
+  return made;
+}
+
 useContent(null);
